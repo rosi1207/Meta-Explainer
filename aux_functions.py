@@ -138,28 +138,24 @@ def ensure_single_channel(image):
 
 def normalize_map(map_):
     """
-    Normalizes the values of a heatmap between 0 and 1, only if they are outside this range.
+    Normalizes a relevance map to values between 0 and 1.
+    If the range is zero (min == max), returns a map filled with zeros.
 
     Args:
-        map_ (numpy.ndarray): Heatmap to normalize.
+        map_ (numpy.ndarray): Relevance map to normalize.
 
     Returns:
-        numpy.ndarray: Normalized heatmap (if necessary).
+        numpy.ndarray: Normalized relevance map.
     """
-    map_min = np.min(map_)
-    map_max = np.max(map_)
+    min_val = np.min(map_)
+    max_val = np.max(map_)
 
-    # Avoid division by zero if all values are equal
-    if map_max == map_min:
+    # If the range is zero (all values are equal), return a map filled with zeros
+    if min_val == max_val:
         return np.zeros_like(map_)
 
-    # Check if the map is already within the range [0, 1]
-    if 0 <= map_min and map_max <= 1:
-        return map_
-
-    # Normalize to the range [0, 1] if necessary
-    normalized_map = (map_ - map_min) / (map_max - map_min)
-    return normalized_map
+    # Standard normalization
+    return (map_ - min_val) / (max_val - min_val)
 
 # Function to validate heatmap
 def is_valid_map(map_data):
@@ -167,3 +163,13 @@ def is_valid_map(map_data):
     if np.isnan(map_data).any() or np.all(map_data == map_data[0]):
         return False
     return True
+
+# Function to apply replacements to the lse_value
+def transform_lse_value(lse_value):
+    # Replace values equal to 1 with 12.5
+    if lse_value == 1:
+        return 12.5
+    # Replace values greater than 12 with 10.5
+    elif lse_value > 12:
+        return 10.5
+    return lse_value  # Return the value unchanged if it doesn't meet any conditions
