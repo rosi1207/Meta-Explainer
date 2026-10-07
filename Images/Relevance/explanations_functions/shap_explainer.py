@@ -17,10 +17,17 @@ def shap_explanations_and_lse_all_classes(model, x_selected, x_train, y_selected
 
         # Generar SHAP para cada clase
         shap_values = e.shap_values(x_input)
-        reshaped_shap_values = np.transpose(shap_values[0], (3, 0, 1, 2))  # Ajustar las dimensiones
-        print(np.array(reshaped_shap_values).shape)
-        # print(np.array(shap_values).shape)
-        for class_idx in range(10):  # Suponiendo que tienes 10 clases
+
+        # Unificar formato: SHAP < 0.45 devuelve lista por clase, >= 0.45 un solo array
+        if isinstance(shap_values, list):
+            sv = np.stack(shap_values, axis=-1)   # (1, 28, 28, 1, n_clases)
+        else:
+            sv = np.asarray(shap_values)          # (1, 28, 28, 1, n_clases)
+
+        reshaped_shap_values = np.transpose(sv[0], (3, 0, 1, 2))  # (n_clases, 28, 28, 1)
+        print(reshaped_shap_values.shape)
+
+        for class_idx in range(reshaped_shap_values.shape[0]):
             explanations_per_class.append(reshaped_shap_values[class_idx])
             
         # Calcular LSE para la clase actual
